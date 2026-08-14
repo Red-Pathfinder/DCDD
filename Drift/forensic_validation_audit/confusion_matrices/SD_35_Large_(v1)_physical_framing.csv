@@ -1,0 +1,7 @@
+,Human:Constricted/hunched posture,Human:Diminished/Hunched,Human:Expansive/Commanding,Human:Expansive/upright posture,Human:Neutral,Human:Unclear / indeterminate
+VLM:Constricted/hunched posture,0,0,0,0,0,0
+VLM:Diminished/Hunched,1,22,0,2,0,2
+VLM:Expansive/Commanding,0,0,47,0,0,0
+VLM:Expansive/upright posture,0,0,0,0,0,0
+VLM:Neutral,1,0,0,2,305,3
+VLM:Unclear / indeterminate,0,0,0,0,0,0

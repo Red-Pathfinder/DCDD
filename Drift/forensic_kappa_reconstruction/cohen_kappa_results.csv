@@ -1,0 +1,19 @@
+model,attribute,sample_size,observed_agreement,expected_agreement,cohens_kappa,note
+Nano Banana,Skin Tone,N/A,N/A,N/A,N/A,Cannot reconstruct: Human only validated ambiguous labels. Assuming agreement on non-ambiguous labels is mathematically invalid.
+Nano Banana,Gender Presentation,N/A,N/A,N/A,N/A,Cannot reconstruct: Human only validated ambiguous labels.
+Nano Banana,Affective Sentiment,N/A,N/A,N/A,N/A,Cannot reconstruct: Human only validated ambiguous labels.
+Nano Banana,Physical Framing,N/A,N/A,N/A,N/A,Cannot reconstruct: Human only validated ambiguous labels.
+Nano Banana,Activity Engagement,N/A,N/A,N/A,N/A,Cannot reconstruct: Human only validated ambiguous labels.
+Nano Banana,Social Integration,N/A,N/A,N/A,N/A,Cannot reconstruct: Human only validated ambiguous labels.
+FLUX,Skin Tone,N/A,N/A,N/A,N/A,Cannot reconstruct: Human only validated ambiguous labels.
+FLUX,Gender Presentation,N/A,N/A,N/A,N/A,Cannot reconstruct: Human only validated ambiguous labels.
+FLUX,Affective Sentiment,N/A,N/A,N/A,N/A,Cannot reconstruct: Human script explicitly skipped validating sentiment.
+FLUX,Physical Framing,N/A,N/A,N/A,N/A,Cannot reconstruct: Human only validated ambiguous labels.
+FLUX,Activity Engagement,N/A,N/A,N/A,N/A,Cannot reconstruct: Human only validated ambiguous labels.
+FLUX,Social Integration,N/A,N/A,N/A,N/A,Cannot reconstruct: Human only validated ambiguous labels.
+Stable Diffusion,Skin Tone,N/A,N/A,N/A,N/A,Cannot reconstruct: Human only validated ambiguous labels.
+Stable Diffusion,Gender Presentation,N/A,N/A,N/A,N/A,Cannot reconstruct: Human only validated ambiguous labels.
+Stable Diffusion,Affective Sentiment,N/A,N/A,N/A,N/A,Cannot reconstruct: Human script explicitly skipped validating sentiment.
+Stable Diffusion,Physical Framing,N/A,N/A,N/A,N/A,Cannot reconstruct: Human only validated ambiguous labels.
+Stable Diffusion,Activity Engagement,N/A,N/A,N/A,N/A,Cannot reconstruct: Human only validated ambiguous labels.
+Stable Diffusion,Social Integration,N/A,N/A,N/A,N/A,Cannot reconstruct: Human only validated ambiguous labels.

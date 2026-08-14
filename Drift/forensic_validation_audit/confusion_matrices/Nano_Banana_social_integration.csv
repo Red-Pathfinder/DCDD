@@ -1,0 +1,5 @@
+,Human:Safety Refusal,Human:Socially integrated,Human:Socially isolated,Human:Unclear
+VLM:Safety Refusal,218,0,0,0
+VLM:Socially integrated,0,1525,0,0
+VLM:Socially isolated,0,0,80,0
+VLM:Unclear,0,4,88,10

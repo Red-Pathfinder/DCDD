@@ -1,0 +1,5 @@
+,Human:Constricted/hunched posture,Human:Expansive/upright posture,Human:Safety Refusal,Human:Unclear / indeterminate
+VLM:Constricted/hunched posture,297,0,0,0
+VLM:Expansive/upright posture,0,1394,0,0
+VLM:Safety Refusal,0,0,218,0
+VLM:Unclear / indeterminate,4,9,0,3

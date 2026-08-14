@@ -1,0 +1,153 @@
+# ════════════════════════════════════════════════════════════════════════════════
+# DRIFT PIPELINE CONFIGURATION
+# Central configuration for the entire image generation → analysis pipeline
+# Version: 1.0
+# Last updated: 2026-06-12
+# ════════════════════════════════════════════════════════════════════════════════
+
+# Project metadata
+project:
+  name: "DCDD - Disability and Demographic Drift"
+  description: "Measures demographic shift in AI-generated images when disability keywords are added"
+  paper_title: "EMNLP - Disability Representation in Image Generation"
+  version: "1.0"
+
+# Base directory structure (relative to this config file)
+paths:
+  base: "."
+  data_raw: "data_raw"
+  data_processed: "data_processed"
+  results: "../results"
+  logs: "logs"
+  scripts: "scripts"
+
+# Models to process in the pipeline
+models:
+  - name: "flux"
+    description: "Flux model image generation"
+    gen_script: "01_image_generation/01_generate_flux.py"
+    extract_script: "02_attribute_extraction/01_flux_attribute.py"
+    extract_v2_script: "02_attribute_extraction/01_flux_v2_attribute.py"
+    analysis_script: "03_analysis/05_flux_analysis.py"
+    data_folder: "01_flux_attributes"
+    output_prefix: "flux"
+
+  - name: "sd35"
+    description: "Stable Diffusion 3.5 model"
+    gen_script: "01_image_generation/02_generate_sd35.py"
+    extract_script: "02_attribute_extraction/02_sd35_attribute.py"
+    extract_v2_script: "02_attribute_extraction/02_sd35_v2_attribute.py"
+    analysis_script: "03_analysis/06_sd35_analysis.py"
+    data_folder: "02_sd35_attributes"
+    output_prefix: "sd35"
+
+  - name: "nanobanana"
+    description: "Nanobanana model"
+    gen_script: "01_image_generation/03_nanabanana.py"
+    extract_script: "02_attribute_extraction/03_nanobanana_attribute.py"
+    analysis_script: "03_analysis/03_nanobanana_analysis.py"
+    data_folder: "03_nanobanana_attributes"
+    output_prefix: "nanobanana"
+
+# Pipeline stages
+stages:
+  - id: 1
+    name: "image_generation"
+    description: "Generate images with/without disability keywords across all models"
+    enabled: true
+    skip_if_exists: true
+
+  - id: 2
+    name: "attribute_extraction"
+    description: "Extract demographic attributes using Vision Language Model"
+    enabled: true
+    skip_if_exists: true
+    vlm_model: "gpt-4-mini"  # or alternative VLM
+
+  - id: 3
+    name: "compliance_cleanup"
+    description: "Apply compliance filters (e.g., remove teen data)"
+    enabled: true
+    skip_if_exists: false
+    filters:
+      - name: "remove_teen_data"
+        enabled: true
+        condition: "age_bin != 'teen (13-17)'"
+        reason: "GDPR/legal compliance"
+
+  - id: 4
+    name: "human_validation"
+    description: "Apply manual overrides from human validation"
+    enabled: true
+    skip_if_exists: false
+    override_csv: "human_overrides.csv"
+
+  - id: 5
+    name: "analysis"
+    description: "Statistical analysis and chart generation"
+    enabled: true
+    skip_if_exists: true
+
+# Data schema and validation
+data:
+  # Expected columns in attribute extraction output
+  attributes:
+    - gender_presentation
+    - perceived_race
+    - skin_tone
+    - perceived_age
+    - sentiment
+    - environment_type
+    - professional_attire
+    - gaze_direction
+    - physical_framing
+    - activity_engagement
+    - social_integration
+    - image_style
+
+  # Condition column for comparing neutral vs. conditioned
+  condition_column: "image_type"
+  neutral_label: "neutral"
+  conditioned_label: "conditioned"
+
+  # Image ID column for linking images to attributes
+  image_id_column: "image_id"
+
+# Analysis parameters
+analysis:
+  dpi: 300
+  chart_format: "png"  # or "pdf"
+  title_fontsize: 10
+  label_fontsize: 9
+  tick_fontsize: 8
+  legend_fontsize: 8
+  annotation_fontsize: 7
+
+  # Color palette (colorblind-safe)
+  color_palette: "colorblind"
+  neutral_color: "#0173b2"  # Blue
+  conditioned_color: "#de8f05"  # Orange
+
+  # Statistical tests
+  significance_level: 0.05
+
+  # Output types
+  outputs:
+    - type: "statistical_summary"
+      filename: "statistical_summary.csv"
+    - type: "charts"
+      filename_pattern: "{model}_{attribute}_comparison.png"
+    - type: "master_analysis"
+      filename: "DCDD_Final_Master_Analysis.xlsx"
+
+# Logging configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  log_dir: "logs"
+  timestamp_format: "%Y-%m-%d %H:%M:%S"
+
+# Execution settings
+execution:
+  parallel_models: false  # Set to true for parallel model processing
+  stop_on_error: true
+  dry_run: false  # Set to true for testing without actual execution

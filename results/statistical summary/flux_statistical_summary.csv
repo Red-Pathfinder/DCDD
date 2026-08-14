@@ -1,0 +1,13 @@
+Attribute,Test Used,Raw P-Value,FDR-Corrected P-Value,Cramers_V,Effect Size,Significant (FDR α=0.05),Counterfactual Flip Rate (%)
+physical_framing,Fisher/Merged Fallback,0.0000,0.0001,0.2398,Medium,True,33.5570
+gender_presentation,Fisher/Merged Fallback,0.0267,0.1602,0.1176,Small,False,20.9559
+professional_attire,Chi-Square,0.1005,0.4022,0.0923,Negligible,False,32.2148
+perceived_race,Fisher/Merged Fallback,0.1593,0.4778,0.0880,Negligible,False,6.7485
+activity_engagement,Fisher/Merged Fallback,0.2680,0.6432,0.0407,Negligible,False,33.8926
+perceived_age,Fisher/Merged Fallback,0.3849,0.7064,0.0098,Negligible,False,25.5034
+skin_tone,Fisher/Merged Fallback,0.4709,0.7064,0.0000,Negligible,False,13.5135
+sentiment,Fisher/Merged Fallback,0.4661,0.7064,0.0000,Negligible,False,26.5101
+gaze_direction,Chi-Square,0.6886,0.7159,0.0000,Negligible,False,33.8926
+environment_type,Chi-Square,0.7159,0.7159,0.0000,Negligible,False,33.8926
+social_integration,Chi-Square,0.5594,0.7159,0.0000,Negligible,False,18.7919
+image_style,Fisher/Merged Fallback,0.6663,0.7159,0.0000,Negligible,False,15.1007
