@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
 """
-DCDD Pipeline Orchestrator
-Unified entry point for the entire image generation → analysis pipeline
-Reads from pipeline_config.yaml and executes stages in sequence
+[HISTORICAL GENERATION / EXPERIMENTATION SCRIPT]
+DCDD Pipeline Orchestrator (Multi-stage raw generation & annotation)
+===================================================================
+NOTE: This script is part of the original data-generation pipeline used
+to synthesize images via fal.ai and extract VLM labels via Gemini API.
+It requires paid API credentials and local generation paths.
+
+For the official, self-contained one-command reproduction of all published
+WACV 2027 paper tables, statistics, and figures using the released dataset,
+please run:
+    bash reproduce.sh   (or python scripts/reproduce_paper.py)
 """
 
 import os

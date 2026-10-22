@@ -6,6 +6,8 @@ Icon
 ._*
 .Spotlight-V100
 .Trashes
+__MACOSX/
+__MACOSX
 
 # Windows
 desktop.ini
@@ -50,3 +52,6 @@ MANIFEST
 .idea/
 *.swp
 *.swo
+
+# Downloaded dataset cache
+dataset_cache/

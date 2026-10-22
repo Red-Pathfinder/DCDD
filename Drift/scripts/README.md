@@ -1,31 +1,43 @@
 # Scripts Directory - Organization & Reference
 
-This directory contains all automation scripts for the pipeline stages.
+This directory contains reproduction scripts, statistical pipelines, and historical generation/annotation utilities.
 
-## Quick Start
+## ★ Official Paper Reproduction (WACV 2027)
 
-Run the main orchestrator to execute the entire pipeline:
+To reproduce the paper's statistical results, reliability figures, and metrics using the published Hugging Face dataset:
 
 ```bash
-python run_pipeline.py
+# From Drift/ directory:
+bash reproduce.sh                 # Default: tabular mode (~1.2 MB download, fast)
+bash reproduce.sh --mode full      # Full mode: downloads all 2,472 images (~1.6 GB)
+
+# Or directly via Python:
+python scripts/reproduce_paper.py --mode tabular
 ```
 
-## Directory Structure
+---
+
+## Historical Data Generation & VLM Extraction
+
+> **Note for Researchers:** The scripts below (`run_pipeline.py`, `01_image_generation/`, `02_attribute_extraction/`) represent the original multi-stage generation and annotation pipeline used to produce the raw benchmark data. They require paid third-party API credentials (fal.ai, Google Gemini API) and operate on raw local image directories. They are retained for archival completeness and transparency, but are **not** needed to reproduce the published findings.
+
+### Historical Pipeline Structure
 
 ```
 scripts/
-├── run_pipeline.py                   ★ MAIN ENTRY POINT - Run this!
-├── validate_stage_outputs.py         ★ Validation before analysis
+├── reproduce_paper.py                ★ OFFICIAL REPRODUCTION ENTRY POINT (WACV 2027)
+├── run_pipeline.py                   [Historical] Generation & annotation orchestrator
+├── validate_stage_outputs.py         [Historical] Validation before analysis
 │
 ├── 00_purge_flux_teens.py            Data cleanup (called by pipeline)
 │
-├── 01_image_generation/              Stage 1: Generate images
+├── 01_image_generation/              Stage 1: Generate images (Requires API keys)
 │   ├── 01_generate_flux.py
 │   ├── 02_generate_sd35.py
 │   ├── 03_nanabanana.py
 │   └── 04_rescue_batch.py
 │
-├── 02_attribute_extraction/          Stage 2: Extract demographics
+├── 02_attribute_extraction/          Stage 2: Extract demographics (Requires VLM API keys)
 │   ├── 01_flux_attribute.py
 │   ├── 01_flux_v2_attribute.py
 │   ├── 02_sd35_attribute.py
@@ -33,10 +45,10 @@ scripts/
 │   ├── 03_nanobanana_attribute.py
 │   └── 09_profession_erasure_batch.py
 │
-├── 03_analysis/                      Stage 5: Statistical analysis
-│   ├── 05_flux_analysis.py           ★ Primary FLUX analysis
-│   ├── 06_sd35_analysis.py           ★ Primary SD3.5 analysis
-│   ├── 03_nanobanana_analysis.py     ★ Primary Nanobanana analysis
+├── 03_analysis/                      Stage 5: Early model-specific analysis scripts
+│   ├── 05_flux_analysis.py           [Historical FLUX exploratory script]
+│   ├── 06_sd35_analysis.py           [Historical SD3.5 exploratory script]
+│   ├── 03_nanobanana_analysis.py     [Historical Nanobanana exploratory script]
 │   │
 │   ├── archive/                      Deprecated/old scripts
 │   │   ├── analysis_v2.py            (old consolidated version)
