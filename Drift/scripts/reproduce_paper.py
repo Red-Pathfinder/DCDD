@@ -48,7 +48,7 @@ if hasattr(sys.stderr, "reconfigure"):
         pass
 
 DEFAULT_REPO_ID = "Red-Pathfinder/dcdd-wacv-2027"
-DEFAULT_REVISION = "19e1548a5ac5f3d0da2f309f61052676b9962492"
+DEFAULT_REVISION = "4ec3dd0e906c04e059a4073c18a69cb75597eba3"
 DEFAULT_CACHE_DIR = "dataset_cache"
 DEFAULT_OUTPUT_DIR = "results/reproduction"
 

@@ -60,7 +60,7 @@ python reproduce.py
 
 *(POSIX systems may alternatively invoke `bash reproduce.sh`).*
 
-Upon first execution, the pipeline automatically retrieves the required tabular benchmark files from the pinned Hugging Face repository (`Red-Pathfinder/dcdd-wacv-2027` @ revision `19e1548`) into `Drift/dataset_cache/` and cryptographically verifies their SHA-256 checksums against `checksums.sha256`. Subsequent runs execute entirely offline from this verified local cache.
+Upon first execution, the pipeline automatically retrieves the required tabular benchmark files from the pinned Hugging Face repository (`Red-Pathfinder/dcdd-wacv-2027` @ revision `4ec3dd0`) into `Drift/dataset_cache/` and cryptographically verifies their SHA-256 checksums against `checksums.sha256`. Subsequent runs execute entirely offline from this verified local cache.
 
 ### Full Dataset Verification (Images)
 
@@ -80,7 +80,7 @@ To guarantee that this analysis remains reproducible over extended multi-year pe
 
 1. **Automated Integrity Verification & Offline Caching**: Ingested benchmark files are validated against immutable SHA-256 signatures upon retrieval and cached in `Drift/dataset_cache/`, allowing subsequent evaluations to execute completely offline.
 2. **Cryptographic Integrity Verification**: Every benchmark file is hashed upon ingestion; execution will halt if local data diverges by a single bit from `checksums.sha256`.
-3. **Immutable Remote Storage**: The underlying image repository is pinned to an immutable commit hash on Hugging Face (`19e1548a5ac5f3d0da2f309f61052676b9962492`).
+3. **Immutable Remote Storage**: The underlying image repository is pinned to an immutable commit hash on Hugging Face (`4ec3dd0e906c04e059a4073c18a69cb75597eba3`).
 4. **Environment Specification**: Dependencies are specified with backwards-compatible version bounds in `requirements.txt` and mirrored in `environment.yml` for Conda.
 5. **Runtime Validation**: Python version ($\ge 3.10$) and all required scientific libraries are checked before execution, providing explicit diagnostic guidance if dependencies are missing.
 
