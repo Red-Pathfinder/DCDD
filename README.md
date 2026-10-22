@@ -60,7 +60,7 @@ python reproduce.py
 
 *(POSIX systems may alternatively invoke `bash reproduce.sh`).*
 
-The script utilizes the self-contained offline dataset cache located in `Drift/dataset_cache/`. It cryptographically verifies the SHA-256 checksum of every tabular data file against `checksums.sha256` prior to evaluation.
+Upon first execution, the pipeline automatically retrieves the required tabular benchmark files from the pinned Hugging Face repository (`Red-Pathfinder/dcdd-wacv-2027` @ revision `cf80c45`) into `Drift/dataset_cache/` and cryptographically verifies their SHA-256 checksums against `checksums.sha256`. Subsequent runs execute entirely offline from this verified local cache.
 
 ### Full Dataset Verification (Images)
 
@@ -78,7 +78,7 @@ python reproduce.py --mode full
 
 To guarantee that this analysis remains reproducible over extended multi-year periods, the repository incorporates the following structural guardrails:
 
-1. **Deterministic Offline Execution**: The core tabular benchmark data required for statistical verification is bundled within `Drift/dataset_cache/`, preventing pipeline failure due to external network availability or remote API deprecations.
+1. **Automated Integrity Verification & Offline Caching**: Ingested benchmark files are validated against immutable SHA-256 signatures upon retrieval and cached in `Drift/dataset_cache/`, allowing subsequent evaluations to execute completely offline.
 2. **Cryptographic Integrity Verification**: Every benchmark file is hashed upon ingestion; execution will halt if local data diverges by a single bit from `checksums.sha256`.
 3. **Immutable Remote Storage**: The underlying image repository is pinned to an immutable commit hash on Hugging Face (`cf80c456b1e094daeb6fd6a886477b42fe911b5f`).
 4. **Environment Specification**: Dependencies are specified with backwards-compatible version bounds in `requirements.txt` and mirrored in `environment.yml` for Conda.
