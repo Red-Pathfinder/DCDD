@@ -35,6 +35,18 @@ import matplotlib.pyplot as plt
 
 warnings.filterwarnings("ignore")
 
+# Ensure UTF-8 output encoding for cross-platform terminals (e.g. Windows Command Prompt)
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+if hasattr(sys.stderr, "reconfigure"):
+    try:
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 DEFAULT_REPO_ID = "Red-Pathfinder/dcdd-wacv-2027"
 DEFAULT_REVISION = "cf80c456b1e094daeb6fd6a886477b42fe911b5f"
 DEFAULT_CACHE_DIR = "dataset_cache"

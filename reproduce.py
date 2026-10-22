@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 """
 Canonical Cross-Platform Reproduction Entry Point
 Disability-Conditioned Demographic Drift (DCDD) — WACV 2027
@@ -19,6 +20,18 @@ import sys
 import subprocess
 from pathlib import Path
 
+# Ensure UTF-8 output encoding for cross-platform terminals (e.g. Windows Command Prompt)
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+if hasattr(sys.stderr, "reconfigure"):
+    try:
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 MIN_PYTHON = (3, 10)
 REQUIRED_PACKAGES = [
     ("pandas", "pandas"),
@@ -35,8 +48,12 @@ def find_local_venv(root_dir: Path) -> Path | None:
     candidates = [
         root_dir / ".venv" / "bin" / "python",
         root_dir / ".venv" / "Scripts" / "python.exe",
+        root_dir / "venv" / "bin" / "python",
+        root_dir / "venv" / "Scripts" / "python.exe",
         root_dir / "Drift" / ".venv" / "bin" / "python",
         root_dir / "Drift" / ".venv" / "Scripts" / "python.exe",
+        root_dir / "Drift" / "venv" / "bin" / "python",
+        root_dir / "Drift" / "venv" / "Scripts" / "python.exe",
     ]
     for candidate in candidates:
         if candidate.is_file():
