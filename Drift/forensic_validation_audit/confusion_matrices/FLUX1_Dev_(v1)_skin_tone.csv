@@ -1,8 +1,0 @@
-,Human:Ambiguous,Human:Ambiguous / indeterminate,Human:Dark,Human:Darker skin tone,Human:Light,Human:Lighter skin tone,Human:Medium
-VLM:Ambiguous,0,1,0,0,0,1,0
-VLM:Ambiguous / indeterminate,0,0,0,0,0,0,0
-VLM:Dark,0,0,1,0,0,0,0
-VLM:Darker skin tone,0,0,0,0,0,0,0
-VLM:Light,0,2,0,0,338,6,0
-VLM:Lighter skin tone,0,0,0,0,0,0,0
-VLM:Medium,0,1,0,1,0,0,29

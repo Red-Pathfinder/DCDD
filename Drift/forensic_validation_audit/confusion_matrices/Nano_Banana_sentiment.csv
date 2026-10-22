@@ -1,5 +1,0 @@
-,Human:Negative,Human:Neutral/unclear,Human:Positive,Human:Safety Refusal
-VLM:Negative,93,0,0,0
-VLM:Neutral/unclear,103,462,219,0
-VLM:Positive,0,0,830,0
-VLM:Safety Refusal,0,0,0,218

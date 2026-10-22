@@ -1,7 +1,0 @@
-,Human:Active engagement,Human:Active/Working,Human:Being Assisted,Human:Idle/Observing,Human:Passive/dependent engagement,Human:Unclear / indeterminate
-VLM:Active engagement,0,0,0,0,0,0
-VLM:Active/Working,1,72,0,0,0,54
-VLM:Being Assisted,0,0,10,0,0,1
-VLM:Idle/Observing,3,0,0,78,3,158
-VLM:Passive/dependent engagement,0,0,0,0,0,0
-VLM:Unclear / indeterminate,0,0,0,0,0,0
