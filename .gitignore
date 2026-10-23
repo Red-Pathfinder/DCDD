@@ -55,3 +55,39 @@ MANIFEST
 
 # Downloaded dataset cache
 dataset_cache/
+
+# Raw image binaries (hosted on Hugging Face: Red-Pathfinder/dcdd-wacv-2027)
+*.jpeg
+*.jpg
+*.png
+!Drift/scripts/gender_inversion/*.png
+!Drift/scripts/plotting/*.png
+
+# Intermediate VLM batch API request logs (base64 payloads)
+*.jsonl
+
+# Draft binaries, PDFs, spreadsheets, and archives
+*.pdf
+*.zip
+*.xlsx
+*.gsheet
+
+# Intermediate working and scratch directories
+results/
+scratch/
+staged_hf_dataset/
+Rebuttal/
+revision_round2/
+Drift/track_B_stochasticity/
+Drift/scripts/draft_scaled_comparision/
+Drift/stratification mapping/
+Supplementary Material/rebuttal_*/
+Supplementary Material/02_VLM_annotation/
+Drift/human_annotation_study/annotator_outputs/
+Drift/human_annotation_study/HUMAN_VALIDATION_*
+Drift/human_annotation_study/Human_Validation_Report.md
+Drift/human_annotation_study/id*.txt
+Drift/human_annotation_study/test_zip.py
+Drift/statistical_audit/AMBIGUOUS_LABEL_AUDIT_*
+Drift/scripts/consolidate_csvs.py
+Supplementary Material/01_generation/03_rescue_batch_nanobanana.py
