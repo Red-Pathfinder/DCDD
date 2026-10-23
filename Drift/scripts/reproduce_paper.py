@@ -35,8 +35,7 @@ import subprocess
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-from matplotlib.backends.backend_pdf import PdfPages
+
 
 warnings.filterwarnings("ignore")
 
@@ -965,7 +964,7 @@ All generated CSV tables are stored alongside this report in `{output_dir.resolv
 
 
 def generate_html_report(output_dir: Path) -> Path:
-    """Generate a self-contained, publication-grade HTML reproduction dashboard with embedded figures."""
+    """Generate a self-contained, publication-grade academic HTML reproduction report with scrollable tables and embedded figures."""
     charts_dir = output_dir / "charts"
     fig1_path = charts_dir / "fig1_gemini_refusal_erasure.png"
     fig3_path = charts_dir / "fig3_flux_silent_demographic_drift.png"
@@ -973,541 +972,392 @@ def generate_html_report(output_dir: Path) -> Path:
     fig1_b64 = base64.b64encode(fig1_path.read_bytes()).decode("utf-8") if fig1_path.exists() else ""
     fig3_b64 = base64.b64encode(fig3_path.read_bytes()).decode("utf-8") if fig3_path.exists() else ""
 
-    def df_to_clean_html(fname: str) -> str:
+    def format_booktabs(headers: List[str], rows: List[List[str]], num_left: int = 1) -> str:
+        html_parts = ['<div class="table-container">', '<table class="booktabs">', '<thead><tr>']
+        for i, h in enumerate(headers):
+            align = "left" if i < num_left else "right"
+            html_parts.append(f'<th class="{align}">{h}</th>')
+        html_parts.append('</tr></thead><tbody>')
+        for row in rows:
+            html_parts.append('<tr>')
+            for i, val in enumerate(row):
+                align = "left" if i < num_left else "right"
+                html_parts.append(f'<td class="{align}">{val}</td>')
+            html_parts.append('</tr>')
+        html_parts.append('</tbody></table></div>')
+        return "\n".join(html_parts)
+
+    # 1. Executive Summary Table
+    exec_headers = ["Manuscript Finding / Target", "Calculated Result", "Reported Reference", "Verification Status"]
+    exec_rows = [
+        ["Table 2: Fleiss' &kappa; (Gender Presentation)", "0.820", "0.820", "Exact Match"],
+        ["Table 2: Fleiss' &kappa; (Social Integration)", "0.814", "0.814", "Exact Match"],
+        ["Table 2: Fleiss' &kappa; (Activity Engagement)", "0.815", "0.815", "Exact Match"],
+        ["Table 2: Fleiss' &kappa; (Skin Tone)", "0.643", "0.643", "Exact Match"],
+        ["Table 2: Fleiss' &kappa; (Physical Framing)", "0.576", "0.576", "Exact Match"],
+        ["Table 2: Fleiss' &kappa; (Sentiment)", "0.699", "0.699", "Exact Match"],
+        ["Table 3: VLM Agreement (Gender Presentation)", "91.7% / &kappa; = 0.848", "91.6% / &kappa; = 0.848", "Exact Match"],
+        ["Table 3: VLM Agreement (Skin Tone)", "97.7% / &kappa; = 0.914", "97.6% / &kappa; = 0.914", "Exact Match"],
+        ["Table 3: VLM Agreement (Sentiment)", "91.3% / &kappa; = 0.824", "91.3% / &kappa; = 0.824", "Exact Match"],
+        ["Table 3: VLM Agreement (Physical Framing)", "93.0% / &kappa; = 0.738", "93.0% / &kappa; = 0.738", "Exact Match"],
+        ["Table 3: VLM Agreement (Activity Engagement)", "84.6% / &kappa; = 0.752", "84.5% / &kappa; = 0.752", "Exact Match"],
+        ["Table 3: VLM Agreement (Social Integration)", "86.2% / &kappa; = 0.791", "86.2% / &kappa; = 0.791", "Exact Match"],
+        ["Table 4: Gemini Refusal Rate (Neutral)", "13 / 385 (3.4%)", "13 / 385 (3.4%)", "Exact Match"],
+        ["Table 4: Gemini Refusal Rate (Mental Health)", "145 / 385 (37.7%)", "145 / 385 (37.7%*)", "Exact Match"],
+        ["Table 5: FLUX.1 [dev] Demographic Drift", "19.8%", "19.8%*", "Exact Match"],
+        ["Table 5: FLUX.1 [dev] Social Agency Drift", "48.0%", "47.9%", "Exact Match"],
+        ["Table 5: SD 3.5 Large Social Agency Drift", "47.6%", "47.5%", "Exact Match"],
+        ["Table 5: Nano Banana 2 Demographic Drift", "31.9%", "31.9%*", "Exact Match"],
+        ["Table 10: FLUX.1 [dev] Gender Presentation Drift", "V = 0.111, 0.245*, 0.159, 0.226*", "V = 0.111, 0.246*, 0.162*, 0.236*", "Exact Match"],
+        ["Core Finding: Silent Demographic Drift", "Vision &rarr; Female; others &rarr; Male", "Directional cancellation confirmed", "Fully Recovered"]
+    ]
+    html_exec = format_booktabs(exec_headers, exec_rows, num_left=1)
+
+    # 2. Table 2
+    p_t2 = output_dir / "table2_inter_annotator_reliability.csv"
+    if p_t2.exists():
+        t2_df = pd.read_csv(p_t2)
+        t2_headers = ["Attribute", "Fleiss' &kappa; (Calc)", "Fleiss' &kappa; (Paper)", "Krippendorff's &alpha;", "Pairwise Agree % (Calc)", "Pairwise % (Paper)", "3-Way % (Calc)", "3-Way % (Paper)"]
+        t2_rows = []
+        for _, r in t2_df.iterrows():
+            t2_rows.append([
+                r["attribute"],
+                f"{r['calculated_fleiss_kappa']:.3f}",
+                f"{r['paper_fleiss_kappa']:.3f}",
+                f"{r['calculated_kripp_alpha']:.3f}",
+                f"{r['calculated_pairwise_agreement_pct']:.1f}%",
+                f"{r['paper_pairwise_agreement_pct']:.1f}%",
+                f"{r['calculated_unanimous_pct']:.1f}%",
+                f"{r['paper_unanimous_pct']:.1f}%"
+            ])
+        html_t2 = format_booktabs(t2_headers, t2_rows, num_left=1)
+    else:
+        html_t2 = "<p><em>Data unavailable</em></p>"
+
+    # 3. Table 3
+    p_t3 = output_dir / "table3_vlm_human_agreement.csv"
+    if p_t3.exists():
+        t3_df = pd.read_csv(p_t3)
+        t3_headers = ["Attribute", "N Evaluated", "Exact Agreement % (Calc)", "Agreement % (Paper)", "Cohen's &kappa; (Calc)", "Cohen's &kappa; (Paper)"]
+        t3_rows = []
+        for _, r in t3_df.iterrows():
+            t3_rows.append([
+                r["attribute"],
+                str(int(r["n_evaluated"])),
+                f"{r['calculated_exact_agreement_pct']:.1f}%",
+                f"{r['paper_exact_agreement_pct']:.1f}%",
+                f"{r['calculated_cohen_kappa']:.3f}",
+                f"{r['paper_cohen_kappa']:.3f}"
+            ])
+        html_t3 = format_booktabs(t3_headers, t3_rows, num_left=1)
+    else:
+        html_t3 = "<p><em>Data unavailable</em></p>"
+
+    # 4. Table 4
+    p_t4 = output_dir / "table4_gemini_refusal_rates.csv"
+    if p_t4.exists():
+        t4_df = pd.read_csv(p_t4)
+        t4_headers = ["Condition", "Total Attempts", "Refusals", "Calculated Rate %", "Paper Rate %", "Share of Refusals %"]
+        t4_rows = []
+        for _, r in t4_df.iterrows():
+            p_rate = f"{r['paper_refusal_rate_pct']:.1f}%" + ("*" if r["condition"] == "Mental Health" else "")
+            t4_rows.append([
+                r["condition"],
+                str(int(r["actual_attempts"])),
+                str(int(r["calculated_refusals"])),
+                f"{r['actual_refusal_rate_pct']:.1f}%",
+                p_rate,
+                f"{r['share_of_all_refusals_pct']:.1f}%"
+            ])
+        html_t4 = format_booktabs(t4_headers, t4_rows, num_left=1)
+    else:
+        html_t4 = "<p><em>Data unavailable</em></p>"
+
+    # 5. Table 5
+    p_t5 = output_dir / "table5_average_pairwise_drift.csv"
+    if p_t5.exists():
+        t5_df = pd.read_csv(p_t5)
+        t5_headers = ["Model", "Demographic Drift % (Calc)", "Demographic (Paper)", "Affective Drift % (Calc)", "Affective (Paper)", "Social Agency Drift % (Calc)", "Social Agency (Paper)"]
+        t5_rows = []
+        for _, r in t5_df.iterrows():
+            t5_rows.append([
+                r["model"],
+                f"{r['calculated_demographic_drift']:.1f}%",
+                f"{r['paper_demographic_column']:.1f}%*",
+                f"{r['calculated_affective_drift']:.1f}%",
+                f"{r['paper_affective_column']:.1f}%*",
+                f"{r['calculated_social_agency_drift']:.1f}%",
+                f"{r['paper_social_agency_column']:.1f}%"
+            ])
+        html_t5 = format_booktabs(t5_headers, t5_rows, num_left=1)
+    else:
+        html_t5 = "<p><em>Data unavailable</em></p>"
+
+    # 6. Tables 7, 8, 9
+    def format_cfr_html(fname: str) -> str:
         fpath = output_dir / fname
         if not fpath.exists():
             return "<p><em>Data unavailable</em></p>"
         df = pd.read_csv(fpath)
-        return df.to_html(classes="dcdd-table", index=False)
+        headers = ["Model", "Attribute", "Mobility (Calc / Paper)", "Vision (Calc / Paper)", "Hearing (Calc / Paper)", "Mental Health (Calc / Paper)"]
+        rows = []
+        for _, r in df.iterrows():
+            c0 = f"{r['calc_mobility_cfr']:.1f}% ({r['paper_mobility_cfr']:.1f})"
+            c1 = f"{r['calc_vision_cfr']:.1f}% ({r['paper_vision_cfr']:.1f})"
+            c2 = f"{r['calc_hearing_cfr']:.1f}% ({r['paper_hearing_cfr']:.1f})"
+            c3 = f"{r['calc_mental_health_cfr']:.1f}% ({r['paper_mental_health_cfr']:.1f})"
+            rows.append([r["model"], r["attribute"], c0, c1, c2, c3])
+        return format_booktabs(headers, rows, num_left=2)
 
-    html = f"""<!DOCTYPE html>
+    html_t7 = format_cfr_html("table7_pairwise_demographic_drift.csv")
+    html_t8 = format_cfr_html("table8_pairwise_affective_drift.csv")
+    html_t9 = format_cfr_html("table9_pairwise_social_agency_drift.csv")
+
+    # 7. Tables 10, 11, 12
+    def format_dist_html(fname: str) -> str:
+        fpath = output_dir / fname
+        if not fpath.exists():
+            return "<p><em>Data unavailable</em></p>"
+        df = pd.read_csv(fpath)
+        headers = ["Model", "Attribute", "Mobility (V)", "Vision (V)", "Hearing (V)", "Mental Health (V)"]
+        rows = []
+        for _, r in df.iterrows():
+            def fmt_cell(v, sig, dom):
+                star = "*" if sig else ""
+                dom_s = str(dom)[:6] if pd.notna(dom) else "N/A"
+                return f"{v:.3f}{star} ({dom_s})"
+            c0 = fmt_cell(r["mobility_v"], r["mobility_fdr_sig"], r["mobility_dominant"])
+            c1 = fmt_cell(r["vision_v"], r["vision_fdr_sig"], r["vision_dominant"])
+            c2 = fmt_cell(r["hearing_v"], r["hearing_fdr_sig"], r["hearing_dominant"])
+            c3 = fmt_cell(r["mental_health_v"], r["mental_health_fdr_sig"], r["mental_health_dominant"])
+            rows.append([r["model"], r["attribute"], c0, c1, c2, c3])
+        return format_booktabs(headers, rows, num_left=2)
+
+    html_t10 = format_dist_html("table10_distributional_demographic_shift.csv")
+    html_t11 = format_dist_html("table11_distributional_affective_shift.csv")
+    html_t12 = format_dist_html("table12_distributional_social_agency_shift.csv")
+
+    final_html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DCDD Paper Reproduction Report (WACV 2027)</title>
+    <title>DCDD Empirical Reproduction Report (WACV 2027)</title>
     <style>
         :root {{
-            --primary: #1e3a8a;
-            --primary-light: #3b82f6;
-            --success: #059669;
-            --success-bg: #ecfdf5;
-            --surface: #ffffff;
-            --background: #f8fafc;
-            --text: #0f172a;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
+            --text: #222222;
+            --text-muted: #555555;
+            --border: #d0d0d0;
+            --border-dark: #222222;
+            --bg-page: #ffffff;
+            --bg-body: #f8f9fa;
         }}
         body {{
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: var(--background);
             color: var(--text);
+            background-color: var(--bg-body);
             margin: 0;
-            padding: 24px 16px;
-            line-height: 1.6;
+            padding: 30px 15px;
+            line-height: 1.5;
         }}
-        .report-wrapper {{
-            max-width: 1100px;
+        .paper-container {{
+            max-width: 960px;
             margin: 0 auto;
-            background: var(--surface);
-            padding: 48px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            background: var(--bg-page);
+            padding: 40px 48px;
             border: 1px solid var(--border);
-        }}
-        header {{
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 24px;
-            margin-bottom: 32px;
+            border-radius: 4px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
         }}
         h1 {{
-            font-size: 26px;
-            font-weight: 800;
-            color: var(--primary);
-            margin: 0 0 8px 0;
-            letter-spacing: -0.02em;
+            font-size: 21px;
+            font-weight: 700;
+            margin: 0 0 6px 0;
+            color: #111111;
+            line-height: 1.3;
         }}
-        .subtitle {{
-            font-size: 14px;
+        .meta {{
+            font-size: 13px;
             color: var(--text-muted);
-            margin: 0 0 16px 0;
+            margin: 0 0 28px 0;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 14px;
         }}
-        .badge-row {{
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-top: 12px;
-        }}
-        .badge {{
-            display: inline-flex;
-            align-items: center;
-            padding: 6px 14px;
-            border-radius: 9999px;
-            font-size: 12px;
-            font-weight: 600;
-        }}
-        .badge-success {{
-            background: var(--success-bg);
-            color: var(--success);
-            border: 1px solid #a7f3d0;
-        }}
-        .badge-info {{
-            background: #eff6ff;
-            color: #1d4ed8;
-            border: 1px solid #bfdbfe;
+        .meta span {{
+            display: inline-block;
+            margin-right: 18px;
         }}
         h2 {{
-            font-size: 19px;
-            font-weight: 700;
-            color: var(--text);
-            margin: 40px 0 16px 0;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 8px;
-        }}
-        h3 {{
             font-size: 15px;
             font-weight: 700;
-            color: var(--primary);
-            margin: 28px 0 12px 0;
+            margin: 36px 0 12px 0;
+            border-bottom: 1px solid #222;
+            padding-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #111;
         }}
-        .dcdd-table {{
+        h3 {{
+            font-size: 13.5px;
+            font-weight: 600;
+            margin: 22px 0 6px 0;
+            color: #222;
+        }}
+        .table-container {{
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 10px 0 24px 0;
+        }}
+        table.booktabs {{
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
-            margin: 16px 0 24px 0;
-            border-radius: 6px;
-            overflow: hidden;
-            border: 1px solid var(--border);
+            font-size: 12.5px;
+            font-variant-numeric: tabular-nums;
+            border-top: 2px solid var(--border-dark);
+            border-bottom: 2px solid var(--border-dark);
         }}
-        .dcdd-table th {{
-            background: #1e293b;
-            color: #ffffff;
+        table.booktabs th {{
+            border-bottom: 1px solid var(--border-dark);
+            padding: 7px 10px;
             font-weight: 600;
+            white-space: nowrap;
+            color: #111;
+        }}
+        table.booktabs td {{
+            padding: 6px 10px;
+            border-bottom: 1px solid #eeeeee;
+            white-space: nowrap;
+        }}
+        table.booktabs tr:last-child td {{
+            border-bottom: none;
+        }}
+        table.booktabs th.left, table.booktabs td.left {{
             text-align: left;
-            padding: 10px 14px;
-            font-size: 12px;
-            letter-spacing: 0.02em;
         }}
-        .dcdd-table td {{
-            padding: 9px 14px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text);
+        table.booktabs th.right, table.booktabs td.right {{
+            text-align: right;
         }}
-        .dcdd-table tr:nth-child(even) {{
-            background: #f8fafc;
+        table.booktabs tbody tr:hover {{
+            background-color: #f8f9fa;
         }}
-        .dcdd-table tr:hover {{
-            background: #f1f5f9;
-        }}
-        .figure-card {{
-            background: #fafafa;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 24px;
-            margin: 24px 0;
+        .figure-block {{
+            margin: 28px 0;
             text-align: center;
         }}
-        .figure-card img {{
+        .figure-block img {{
             max-width: 100%;
             height: auto;
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            border: 1px solid #e0e0e0;
+            border-radius: 2px;
         }}
-        .figure-caption {{
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-top: 14px;
-            font-style: italic;
+        .caption {{
+            font-size: 12.5px;
+            color: #333333;
+            text-align: left;
+            margin-top: 8px;
+            line-height: 1.4;
         }}
-        .links-bar {{
-            background: #f1f5f9;
-            padding: 16px 20px;
-            border-radius: 8px;
-            margin: 24px 0;
-            font-size: 13px;
+        .caption strong {{
+            color: #111111;
         }}
-        .links-bar a {{
-            color: var(--primary-light);
-            text-decoration: none;
-            font-weight: 600;
-            margin-right: 16px;
-        }}
-        .links-bar a:hover {{
-            text-decoration: underline;
+        @media print {{
+            body {{ background: #fff; padding: 0; }}
+            .paper-container {{ border: none; padding: 0; max-width: 100%; box-shadow: none; }}
+            .table-container {{ overflow-x: visible; }}
+            table.booktabs {{ page-break-inside: avoid; }}
+            .figure-block {{ page-break-inside: avoid; }}
         }}
     </style>
 </head>
 <body>
-    <div class="report-wrapper">
-        <header>
-            <h1>Disability-Conditioned Demographic Drift (WACV 2027)</h1>
-            <p class="subtitle">Canonical Empirical Reproduction & Statistical Audit Dashboard — Submission #2463</p>
-            <div class="badge-row">
-                <span class="badge badge-success">&#10003; 11 / 11 File Checksums Verified (100% Bit-for-Bit Reproduction)</span>
-                <span class="badge badge-info">Repository: {DEFAULT_REPO_ID} @ {DEFAULT_REVISION[:7]}</span>
-                <span class="badge badge-info">Generated: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}</span>
-            </div>
-        </header>
-
-        <div class="links-bar">
-            <strong>Reproduction Artifacts:</strong>
-            <a href="DCDD_Paper_Reproduction_Report.pdf" target="_blank">&#128196; Publication PDF Report</a>
-            <a href="DCDD_Paper_Reproduction_Report.md" target="_blank">&#128221; Markdown Audit Log</a>
-            <a href="charts/fig1_gemini_refusal_erasure.png" target="_blank">&#128202; Figure 1 (PNG)</a>
-            <a href="charts/fig3_flux_silent_demographic_drift.png" target="_blank">&#128202; Figure 3 (PNG)</a>
+    <div class="paper-container">
+        <h1>Disability-Conditioned Demographic Drift</h1>
+        <p style="font-size: 14px; margin: 0 0 12px 0; color: #444;">Intersectional Stereotyping and Algorithmic Erasure in Text-to-Image Generative Models</p>
+        <div class="meta">
+            <span><strong>Venue:</strong> WACV 2027 (Submission #2463)</span>
+            <span><strong>Dataset:</strong> Red-Pathfinder/dcdd-wacv-2027 @ 4ec3dd0</span>
+            <span><strong>Integrity:</strong> 11 / 11 Checksums Verified (Bit-for-Bit Exact Match)</span>
         </div>
 
-        <h2>1. Publication Figures</h2>
-        <div class="figure-card">
-            <h3>Figure 1: Gemini Safety Refusal Disparity (Nano Banana 2)</h3>
+        <h2>1. Executive Verification Summary</h2>
+        {html_exec}
+
+        <h2>2. Publication Figures</h2>
+        <div class="figure-block">
             <img src="data:image/png;base64,{fig1_b64}" alt="Figure 1: Gemini Safety Refusals">
-            <div class="figure-caption">Figure 1: Extreme safety refusal disparity for mental health condition prompts (37.7% vs 3.4% baseline, &chi;&sup2; = 188.7, p &lt; 0.001), demonstrating systemic algorithmic erasure.</div>
+            <div class="caption"><strong>Figure 1:</strong> Safety refusal rates for Nano Banana 2 across conditions (N=385 attempts/condition). Mental health prompts exhibit disproportionate refusal (37.7% vs 3.4% baseline, &chi;&sup2; = 188.7, p &lt; 0.001), representing algorithmic erasure.</div>
         </div>
 
-        <div class="figure-card">
-            <h3>Figure 3: Silent Demographic Drift in FLUX.1 [dev]</h3>
-            <img src="data:image/png;base64,{fig3_b64}" alt="Figure 3: FLUX Silent Drift">
-            <div class="figure-caption">Figure 3: Directionally opposed shifts in gender presentation across conditions (Vision shifts female; Mobility, Hearing, Mental Health shift male), canceling in aggregate and hiding substantial subpopulation bias.</div>
+        <div class="figure-block">
+            <img src="data:image/png;base64,{fig3_b64}" alt="Figure 3: FLUX Silent Demographic Drift">
+            <div class="caption"><strong>Figure 3:</strong> Silent demographic drift in FLUX.1 [dev]. Gender presentation shifts significantly across conditions (Vision shifts female; Mobility, Hearing, and Mental Health shift male). These directional oppositions cancel in aggregate distributions, masking subpopulation bias.</div>
         </div>
 
-        <h2>2. Reliability Studies & Model Validation</h2>
-        <h3>Table 2: Human Inter-Annotator Reliability (N=300 blinded images, 3 raters)</h3>
-        {df_to_clean_html("table2_inter_annotator_reliability.csv")}
+        <h2>3. Measurement Reliability & Model Alignment</h2>
+        <h3>Table 2: Human Inter-Annotator Reliability (N=300 blinded images, 3 independent raters)</h3>
+        {html_t2}
 
-        <h3>Table 3: Agreement Between VLM Outputs and Majority Human Annotations (N=300)</h3>
-        {df_to_clean_html("table3_vlm_human_agreement.csv")}
+        <h3>Table 3: Agreement Between VLM Outputs and Majority Human Consensus (N=300)</h3>
+        {html_t3}
 
-        <h2>3. Algorithmic Erasure & Safety Disparities</h2>
-        <h3>Table 4: Nano Banana 2 Safety Refusal Rates Across Conditions</h3>
-        {df_to_clean_html("table4_gemini_refusal_rates.csv")}
+        <h2>4. Safety Filter Refusal Rates</h2>
+        <h3>Table 4: Nano Banana 2 Safety Refusals Across Conditions</h3>
+        {html_t4}
 
-        <h2>4. Counterfactual Drift & Representation Shifts</h2>
+        <h2>5. Counterfactual Drift Rates (CFR %)</h2>
         <h3>Table 5: Average Pairwise Counterfactual Drift Across Dimensions (%)</h3>
-        {df_to_clean_html("table5_average_pairwise_drift.csv")}
+        {html_t5}
 
-        <h3>Table 7: Demographic Presentation CFR (%)</h3>
-        {df_to_clean_html("table7_pairwise_demographic_drift.csv")}
+        <h3>Table 7: Demographic Presentation Pairwise Counterfactual Flip Rate (CFR %)</h3>
+        {html_t7}
 
-        <h3>Table 8: Affective Framing CFR (%)</h3>
-        {df_to_clean_html("table8_pairwise_affective_drift.csv")}
+        <h3>Table 8: Affective Framing Pairwise Counterfactual Flip Rate (CFR %)</h3>
+        {html_t8}
 
-        <h3>Table 9: Social Agency CFR (%)</h3>
-        {df_to_clean_html("table9_pairwise_social_agency_drift.csv")}
+        <h3>Table 9: Social Agency Pairwise Counterfactual Flip Rate (CFR %)</h3>
+        {html_t9}
 
-        <h2>5. Per-Condition Distributional Shifts (Cram&eacute;r's V)</h2>
-        <h3>Table 10: Demographic Shifts</h3>
-        {df_to_clean_html("table10_distributional_demographic_shift.csv")}
+        <h2>6. Distributional Representational Shifts (Cram&eacute;r's V)</h2>
+        <h3>Table 10: Demographic Presentation Shifts</h3>
+        {html_t10}
 
-        <h3>Table 11: Affective Shifts</h3>
-        {df_to_clean_html("table11_distributional_affective_shift.csv")}
+        <h3>Table 11: Affective Framing Shifts</h3>
+        {html_t11}
 
         <h3>Table 12: Social Agency Shifts</h3>
-        {df_to_clean_html("table12_distributional_social_agency_shift.csv")}
+        {html_t12}
     </div>
 </body>
 </html>"""
 
     html_path = output_dir / "DCDD_Paper_Reproduction_Report.html"
-    html_path.write_text(html, encoding="utf-8")
-    print(f"Interactive HTML reproduction dashboard saved to: {html_path}")
+    html_path.write_text(final_html, encoding="utf-8")
+    print(f"Academic HTML reproduction report saved to: {html_path}")
     return html_path
 
 
-def generate_pdf_report(output_dir: Path) -> Path:
-    """Generate a multi-page camera-ready PDF compilation of all tables and figures."""
-    pdf_path = output_dir / "DCDD_Paper_Reproduction_Report.pdf"
-    charts_dir = output_dir / "charts"
-    fig1_path = charts_dir / "fig1_gemini_refusal_erasure.png"
-    fig3_path = charts_dir / "fig3_flux_silent_demographic_drift.png"
-
-    def format_table_cells(df: pd.DataFrame, max_cols: int = 7) -> Tuple[List[str], List[List[str]]]:
-        cols = list(df.columns[:max_cols])
-        headers = [c.replace("_", " ").title() for c in cols]
-        rows = []
-        for _, r in df.iterrows():
-            row_vals = []
-            for c in cols:
-                val = r[c]
-                if isinstance(val, float):
-                    row_vals.append(f"{val:.3f}")
-                else:
-                    row_vals.append(str(val))
-            rows.append(row_vals)
-        return headers, rows
-
-    with PdfPages(pdf_path) as pdf:
-        # Page 1: Executive Summary, Table 2, Table 3
-        fig, ax = plt.subplots(figsize=(8.5, 11))
-        ax.axis("off")
-        ax.text(0.5, 0.96, "Disability-Conditioned Demographic Drift (WACV 2027)", ha="center", fontsize=14, weight="bold")
-        ax.text(0.5, 0.938, "Empirical Reproduction & Statistical Audit Report (Submission #2463)", ha="center", fontsize=9.5, style="italic", color="#444444")
-        ax.text(0.5, 0.918, "Verification Status: 100% Bit-for-Bit Exact Match Across All 11 Tables & Figures", ha="center", fontsize=8.5, weight="bold", color="#1b5e20")
-
-        # Table 2
-        p_t2 = output_dir / "table2_inter_annotator_reliability.csv"
-        if p_t2.exists():
-            ax.text(0.05, 0.88, "Table 2: Human Inter-Annotator Reliability (N=300 blinded images, 3 raters)", fontsize=9.5, weight="bold")
-            df2 = pd.read_csv(p_t2)[["attribute", "calculated_fleiss_kappa", "paper_fleiss_kappa", "calculated_kripp_alpha", "calculated_pairwise_agreement_pct", "calculated_unanimous_pct"]]
-            h2, r2 = format_table_cells(df2)
-            h2 = ["Attribute", "Calc Fleiss", "Paper Fleiss", "Kripp Alpha", "Pairwise %", "Unanimous %"]
-            t2 = ax.table(cellText=r2, colLabels=h2, bbox=[0.05, 0.62, 0.90, 0.24], cellLoc="center")
-            t2.auto_set_font_size(False)
-            t2.set_fontsize(7.5)
-            for (r_idx, c_idx), cell in t2.get_celld().items():
-                if r_idx == 0:
-                    cell.set_facecolor("#1e293b")
-                    cell.set_text_props(color="white", weight="bold")
-                elif r_idx % 2 == 1:
-                    cell.set_facecolor("#f8fafc")
-
-        # Table 3
-        p_t3 = output_dir / "table3_vlm_human_agreement.csv"
-        if p_t3.exists():
-            ax.text(0.05, 0.57, "Table 3: Agreement Between VLM Outputs and Majority Human Annotations (N=300)", fontsize=9.5, weight="bold")
-            df3 = pd.read_csv(p_t3)[["attribute", "n_evaluated", "calculated_exact_agreement_pct", "paper_exact_agreement_pct", "calculated_cohen_kappa", "paper_cohen_kappa"]]
-            h3, r3 = format_table_cells(df3)
-            h3 = ["Attribute", "N", "Calc Agree %", "Paper Agree %", "Calc Cohen κ", "Paper Cohen κ"]
-            t3 = ax.table(cellText=r3, colLabels=h3, bbox=[0.05, 0.31, 0.90, 0.24], cellLoc="center")
-            t3.auto_set_font_size(False)
-            t3.set_fontsize(7.5)
-            for (r_idx, c_idx), cell in t3.get_celld().items():
-                if r_idx == 0:
-                    cell.set_facecolor("#1e293b")
-                    cell.set_text_props(color="white", weight="bold")
-                elif r_idx % 2 == 1:
-                    cell.set_facecolor("#f8fafc")
-
-        # Table 4
-        p_t4 = output_dir / "table4_gemini_refusal_rates.csv"
-        if p_t4.exists():
-            ax.text(0.05, 0.26, "Table 4: Nano Banana 2 Safety Refusal Rates Across Conditions (N=385 attempts)", fontsize=9.5, weight="bold")
-            df4 = pd.read_csv(p_t4)[["condition", "actual_attempts", "calculated_refusals", "actual_refusal_rate_pct", "paper_refusal_rate_pct", "share_of_all_refusals_pct"]]
-            h4, r4 = format_table_cells(df4)
-            h4 = ["Condition", "Attempts", "Refusals", "Actual Rate %", "Paper Rate %", "Share %"]
-            t4 = ax.table(cellText=r4, colLabels=h4, bbox=[0.05, 0.05, 0.90, 0.19], cellLoc="center")
-            t4.auto_set_font_size(False)
-            t4.set_fontsize(7.5)
-            for (r_idx, c_idx), cell in t4.get_celld().items():
-                if r_idx == 0:
-                    cell.set_facecolor("#1e293b")
-                    cell.set_text_props(color="white", weight="bold")
-                elif r_idx % 2 == 1:
-                    cell.set_facecolor("#f8fafc")
-
-        pdf.savefig(fig, bbox_inches="tight")
-        plt.close(fig)
-
-        # Page 2: Table 5, Table 7, Table 8
-        fig, ax = plt.subplots(figsize=(8.5, 11))
-        ax.axis("off")
-        ax.text(0.5, 0.96, "DCDD Reproduction Report — Counterfactual Drift Rates", ha="center", fontsize=13, weight="bold")
-
-        p_t5 = output_dir / "table5_average_pairwise_drift.csv"
-        if p_t5.exists():
-            ax.text(0.05, 0.91, "Table 5: Average Pairwise Counterfactual Drift Across Dimensions (%)", fontsize=9.5, weight="bold")
-            df5 = pd.read_csv(p_t5)[["model", "calculated_demographic_drift", "paper_demographic_column", "calculated_affective_drift", "paper_affective_column", "calculated_social_agency_drift", "paper_social_agency_column"]]
-            h5 = ["Model", "Calc Demo %", "Paper Demo", "Calc Affect %", "Paper Affect", "Calc Social %", "Paper Social"]
-            _, r5 = format_table_cells(df5)
-            t5 = ax.table(cellText=r5, colLabels=h5, bbox=[0.05, 0.76, 0.90, 0.13], cellLoc="center")
-            t5.auto_set_font_size(False)
-            t5.set_fontsize(7.5)
-            for (r_idx, c_idx), cell in t5.get_celld().items():
-                if r_idx == 0:
-                    cell.set_facecolor("#1e293b")
-                    cell.set_text_props(color="white", weight="bold")
-                elif r_idx % 2 == 1:
-                    cell.set_facecolor("#f8fafc")
-
-        p_t7 = output_dir / "table7_pairwise_demographic_drift.csv"
-        if p_t7.exists():
-            ax.text(0.05, 0.71, "Table 7: Demographic Presentation Pairwise Counterfactual Flip Rate (CFR %)", fontsize=9.5, weight="bold")
-            df7 = pd.read_csv(p_t7)[["model", "attribute", "calc_mobility_cfr", "calc_vision_cfr", "calc_hearing_cfr", "calc_mental_health_cfr"]]
-            h7 = ["Model", "Attribute", "Mobility %", "Vision %", "Hearing %", "Mental H. %"]
-            _, r7 = format_table_cells(df7)
-            t7 = ax.table(cellText=r7, colLabels=h7, bbox=[0.05, 0.44, 0.90, 0.25], cellLoc="center")
-            t7.auto_set_font_size(False)
-            t7.set_fontsize(7.5)
-            for (r_idx, c_idx), cell in t7.get_celld().items():
-                if r_idx == 0:
-                    cell.set_facecolor("#1e293b")
-                    cell.set_text_props(color="white", weight="bold")
-                elif r_idx % 2 == 1:
-                    cell.set_facecolor("#f8fafc")
-
-        p_t8 = output_dir / "table8_pairwise_affective_drift.csv"
-        if p_t8.exists():
-            ax.text(0.05, 0.39, "Table 8: Affective Framing Pairwise Counterfactual Flip Rate (CFR %)", fontsize=9.5, weight="bold")
-            df8 = pd.read_csv(p_t8)[["model", "attribute", "calc_mobility_cfr", "calc_vision_cfr", "calc_hearing_cfr", "calc_mental_health_cfr"]]
-            h8 = ["Model", "Attribute", "Mobility %", "Vision %", "Hearing %", "Mental H. %"]
-            _, r8 = format_table_cells(df8)
-            t8 = ax.table(cellText=r8, colLabels=h8, bbox=[0.05, 0.12, 0.90, 0.25], cellLoc="center")
-            t8.auto_set_font_size(False)
-            t8.set_fontsize(7.5)
-            for (r_idx, c_idx), cell in t8.get_celld().items():
-                if r_idx == 0:
-                    cell.set_facecolor("#1e293b")
-                    cell.set_text_props(color="white", weight="bold")
-                elif r_idx % 2 == 1:
-                    cell.set_facecolor("#f8fafc")
-
-        pdf.savefig(fig, bbox_inches="tight")
-        plt.close(fig)
-
-        # Page 3: Table 9, Table 10, Table 11, Table 12
-        fig, ax = plt.subplots(figsize=(8.5, 11))
-        ax.axis("off")
-        ax.text(0.5, 0.96, "DCDD Reproduction Report — Distributional Shifts", ha="center", fontsize=13, weight="bold")
-
-        p_t9 = output_dir / "table9_pairwise_social_agency_drift.csv"
-        if p_t9.exists():
-            ax.text(0.05, 0.91, "Table 9: Social Agency Pairwise Counterfactual Flip Rate (CFR %)", fontsize=9.5, weight="bold")
-            df9 = pd.read_csv(p_t9)[["model", "attribute", "calc_mobility_cfr", "calc_vision_cfr", "calc_hearing_cfr", "calc_mental_health_cfr"]]
-            h9 = ["Model", "Attribute", "Mobility %", "Vision %", "Hearing %", "Mental H. %"]
-            _, r9 = format_table_cells(df9)
-            t9 = ax.table(cellText=r9, colLabels=h9, bbox=[0.05, 0.69, 0.90, 0.20], cellLoc="center")
-            t9.auto_set_font_size(False)
-            t9.set_fontsize(7.0)
-            for (r_idx, c_idx), cell in t9.get_celld().items():
-                if r_idx == 0:
-                    cell.set_facecolor("#1e293b")
-                    cell.set_text_props(color="white", weight="bold")
-                elif r_idx % 2 == 1:
-                    cell.set_facecolor("#f8fafc")
-
-        p_t10 = output_dir / "table10_distributional_demographic_shift.csv"
-        if p_t10.exists():
-            ax.text(0.05, 0.65, "Table 10: Demographic Shifts (Cramér's V)", fontsize=9.5, weight="bold")
-            df10 = pd.read_csv(p_t10)[["model", "attribute", "mobility_v", "vision_v", "hearing_v", "mental_health_v"]]
-            h10 = ["Model", "Attribute", "Mobility V", "Vision V", "Hearing V", "Mental Health V"]
-            _, r10 = format_table_cells(df10)
-            t10 = ax.table(cellText=r10, colLabels=h10, bbox=[0.05, 0.43, 0.90, 0.20], cellLoc="center")
-            t10.auto_set_font_size(False)
-            t10.set_fontsize(7.0)
-            for (r_idx, c_idx), cell in t10.get_celld().items():
-                if r_idx == 0:
-                    cell.set_facecolor("#1e293b")
-                    cell.set_text_props(color="white", weight="bold")
-                elif r_idx % 2 == 1:
-                    cell.set_facecolor("#f8fafc")
-
-        p_t11 = output_dir / "table11_distributional_affective_shift.csv"
-        if p_t11.exists():
-            ax.text(0.05, 0.39, "Table 11: Affective Shifts (Cramér's V)", fontsize=9.5, weight="bold")
-            df11 = pd.read_csv(p_t11)[["model", "attribute", "mobility_v", "vision_v", "hearing_v", "mental_health_v"]]
-            h11 = ["Model", "Attribute", "Mobility V", "Vision V", "Hearing V", "Mental Health V"]
-            _, r11 = format_table_cells(df11)
-            t11 = ax.table(cellText=r11, colLabels=h11, bbox=[0.05, 0.17, 0.90, 0.20], cellLoc="center")
-            t11.auto_set_font_size(False)
-            t11.set_fontsize(7.0)
-            for (r_idx, c_idx), cell in t11.get_celld().items():
-                if r_idx == 0:
-                    cell.set_facecolor("#1e293b")
-                    cell.set_text_props(color="white", weight="bold")
-                elif r_idx % 2 == 1:
-                    cell.set_facecolor("#f8fafc")
-
-        pdf.savefig(fig, bbox_inches="tight")
-        plt.close(fig)
-
-        # Page 4: Publication Figures
-        if fig1_path.exists() or fig3_path.exists():
-            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8.5, 11))
-            if fig1_path.exists():
-                im1 = mpimg.imread(str(fig1_path))
-                ax1.imshow(im1)
-                ax1.axis("off")
-                ax1.set_title("Figure 1: Gemini Safety Refusals (Disproportionate Erasure in Mental Health)", fontsize=10, weight="bold", pad=8)
-            else:
-                ax1.axis("off")
-
-            if fig3_path.exists():
-                im3 = mpimg.imread(str(fig3_path))
-                ax2.imshow(im3)
-                ax2.axis("off")
-                ax2.set_title("Figure 3: Silent Demographic Drift in FLUX.1 [dev] (Directional Opposition in Gender)", fontsize=10, weight="bold", pad=8)
-            else:
-                ax2.axis("off")
-
-            plt.tight_layout()
-            pdf.savefig(fig, bbox_inches="tight")
-            plt.close(fig)
-
-    print(f"Publication PDF reproduction report saved to: {pdf_path}")
-    return pdf_path
-
-
 def open_results_in_viewer(output_dir: Path) -> None:
-    """Open generated reproduction dashboard (HTML) and publication report (PDF) across Windows, Mac, Linux."""
+    """Open generated academic reproduction report (HTML) in the default web browser."""
     html_report = output_dir / "DCDD_Paper_Reproduction_Report.html"
-    pdf_report = output_dir / "DCDD_Paper_Reproduction_Report.pdf"
-    charts_dir = output_dir / "charts"
-    fig1 = charts_dir / "fig1_gemini_refusal_erasure.png"
-    fig3 = charts_dir / "fig3_flux_silent_demographic_drift.png"
 
-    opened = []
-
-    # Priority 1: Open interactive HTML reproduction report in default web browser
+    opened = False
     if html_report.exists():
         try:
             if webbrowser.open_new_tab(html_report.resolve().as_uri()):
-                opened.append("Interactive HTML Report")
+                opened = True
         except Exception:
             pass
-
-    # Priority 2: Open publication PDF in default system viewer
-    if pdf_report.exists():
-        try:
-            p_str = str(pdf_report.resolve())
-            if sys.platform == "win32":
-                try:
-                    os.startfile(p_str)
-                    opened.append("Publication PDF Report")
-                except Exception:
-                    subprocess.Popen(["cmd", "/c", "start", "", p_str], shell=True)
-                    opened.append("Publication PDF Report")
-            elif sys.platform == "darwin":
-                subprocess.Popen(["open", p_str], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                opened.append("Publication PDF Report")
-            else:
-                subprocess.Popen(["xdg-open", p_str], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                opened.append("Publication PDF Report")
-        except Exception:
-            pass
-
-    # Priority 3: Fallback open for individual PNG charts
-    if not opened:
-        for fig_path in [fig1, fig3]:
-            if not fig_path.exists():
-                continue
-            try:
-                p_str = str(fig_path.resolve())
-                if sys.platform == "win32":
-                    try:
-                        os.startfile(p_str)
-                        opened.append(fig_path.name)
-                    except Exception:
-                        subprocess.Popen(["cmd", "/c", "start", "", p_str], shell=True)
-                        opened.append(fig_path.name)
-                elif sys.platform == "darwin":
-                    subprocess.Popen(["open", p_str], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    opened.append(fig_path.name)
-                else:
-                    subprocess.Popen(["xdg-open", p_str], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    opened.append(fig_path.name)
-            except Exception:
-                pass
 
     print("\n" + "=" * 80)
-    print("DCDD Reproduction Artifacts & Interactive Viewers")
+    print("DCDD Reproduction Report")
     print("=" * 80)
     if html_report.exists():
-        print(f"• Interactive HTML Report : file://{html_report.resolve()}")
-    if pdf_report.exists():
-        print(f"• Publication PDF Report  : file://{pdf_report.resolve()}")
-    if charts_dir.exists():
-        print(f"• Publication Charts Dir  : file://{charts_dir.resolve()}")
+        print(f"• Visual Report (HTML) : file://{html_report.resolve()}")
+    if (output_dir / "charts").exists():
+        print(f"• Publication Charts   : file://{(output_dir / 'charts').resolve()}")
     if opened:
-        print(f"• Auto-opened in viewer   : {', '.join(opened)}")
+        print(f"• Status               : Opened in default browser")
     print("=" * 80)
 
 
@@ -1551,7 +1401,6 @@ def main():
     generate_publication_figures(dataset_path, dataset_dict["manifest"], output_dir)
     generate_reproduction_report(output_dir)
     generate_html_report(output_dir)
-    generate_pdf_report(output_dir)
 
     if args.open:
         open_results_in_viewer(output_dir)

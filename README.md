@@ -83,7 +83,7 @@ python reproduce.py
 
 Upon first execution, the pipeline automatically retrieves the required tabular benchmark files from the pinned Hugging Face repository (`Red-Pathfinder/dcdd-wacv-2027` @ revision `4ec3dd0`) into `Drift/dataset_cache/` and cryptographically verifies their SHA-256 checksums against `checksums.sha256`. Subsequent runs execute entirely offline from this verified local cache.
 
-Upon completion, the pipeline automatically compiles and launches the interactive reproduction dashboard (`DCDD_Paper_Reproduction_Report.html`) and publication PDF report (`DCDD_Paper_Reproduction_Report.pdf`) containing camera-ready tables, verification metrics, and embedded publication figures (`fig1_gemini_refusal_erasure.png` and `fig3_flux_silent_demographic_drift.png`) in your default browser and system viewer. To suppress automatic opening in headless or CI environments, pass `--no-open`:
+Upon completion, the pipeline displays aligned terminal tables and automatically opens the standalone academic reproduction report (`DCDD_Paper_Reproduction_Report.html`) in your default web browser, displaying camera-ready booktabs tables and embedded publication figures (`fig1_gemini_refusal_erasure.png` and `fig3_flux_silent_demographic_drift.png`). To suppress automatic browser opening in headless or CI environments, pass `--no-open`:
 
 ```bash
 python reproduce.py --no-open
@@ -124,8 +124,7 @@ Upon completion, the reproduction script displays aligned terminal tables and ex
 | **Table 4 & Fig. 1** | Safety filter refusal counts and condition rates ($145 / 385 = 37.7\%$ refusal rate for mental health prompts). | Terminal, Report, `tables/table4_gemini_refusal_rates.csv`, & `charts/fig1_gemini_refusal_erasure.png` |
 | **Tables 5, 7, 8, 9** | Pairwise Counterfactual Flip Rates (CFR %) across demographic, affective, and social agency dimensions. | Terminal, Report, & `tables/table{5,7,8,9}_*.csv` |
 | **Tables 10, 11, 12 & Fig. 3** | Per-condition distribution shifts (bias-corrected Cramér's V, $\chi^2$ independence tests, FDR $q$-values, and directional shift identification). | Terminal, Report, `tables/table{10,11,12}_*.csv`, & `charts/fig3_flux_silent_demographic_drift.png` |
-| **Interactive Dashboard** | Complete self-contained HTML audit dashboard with responsive styling, status badges, and embedded publication figures (opens in any browser). | `Drift/results/reproduction/DCDD_Paper_Reproduction_Report.html` |
-| **Publication PDF Report** | Multi-page camera-ready PDF document compiling all 11 manuscript tables, side-by-side calculated vs paper metrics, and publication charts. | `Drift/results/reproduction/DCDD_Paper_Reproduction_Report.pdf` |
+| **Visual Report (HTML)** | Standalone academic reproduction report with LaTeX booktabs styling, horizontally scrollable tables, and embedded publication figures. | `Drift/results/reproduction/DCDD_Paper_Reproduction_Report.html` |
 | **Consolidated Audit** | Comprehensive side-by-side markdown comparison contrasting every calculated metric against reported manuscript figures. | `Drift/results/reproduction/DCDD_Paper_Reproduction_Report.md` |
 
 ---
