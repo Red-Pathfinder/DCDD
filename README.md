@@ -25,14 +25,32 @@ The reproduction suite is operating system-independent (tested on Linux, macOS, 
 
 ### Option A: Standard Virtual Environment (`pip`)
 
+**Linux / macOS:**
 ```bash
 git clone https://github.com/Red-Pathfinder/DCDD.git
 cd DCDD
 
 python3 -m venv .venv
-source .venv/bin/activate       # On Windows: .venv\Scripts\activate
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
+
+**Windows (PowerShell / Command Prompt):**
+```powershell
+git clone https://github.com/Red-Pathfinder/DCDD.git
+cd DCDD
+
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+> [!TIP]
+> If Windows PowerShell restricts script execution (`running scripts is disabled on this system`), install dependencies directly into the virtual environment without activating:
+> ```powershell
+> .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+> ```
+> `reproduce.py` and `reproduce.bat` automatically detect and use `.venv\Scripts\python.exe`.
 
 ### Option B: Conda Environment
 
@@ -58,7 +76,7 @@ From the repository root, run the Python reproduction entry point:
 python reproduce.py
 ```
 
-*(POSIX systems may alternatively invoke `bash reproduce.sh`).*
+*(POSIX systems may alternatively invoke `bash reproduce.sh`; Windows users may invoke `reproduce.bat`).*
 
 Upon first execution, the pipeline automatically retrieves the required tabular benchmark files from the pinned Hugging Face repository (`Red-Pathfinder/dcdd-wacv-2027` @ revision `4ec3dd0`) into `Drift/dataset_cache/` and cryptographically verifies their SHA-256 checksums against `checksums.sha256`. Subsequent runs execute entirely offline from this verified local cache.
 

@@ -95,15 +95,29 @@ def main() -> None:
             sys.exit(result.returncode)
 
     if missing:
+        if sys.platform == "win32":
+            setup_instructions = [
+                "To install dependencies in a virtual environment on Windows:",
+                "    python -m venv .venv",
+                "    .venv\\Scripts\\activate",
+                "    pip install -r requirements.txt\n",
+                "Or install directly into the environment (avoids PowerShell execution policy limits):",
+                "    .\\.venv\\Scripts\\python.exe -m pip install -r requirements.txt\n",
+            ]
+        else:
+            setup_instructions = [
+                "To install dependencies in a virtual environment:",
+                "    python3 -m venv .venv",
+                "    source .venv/bin/activate",
+                "    pip install -r requirements.txt\n",
+            ]
+
         msg = [
             "=" * 80,
             "DCDD Reproduction Pipeline — Environment Setup Required",
             "=" * 80,
             f"Missing required packages: {', '.join(missing)}\n",
-            "To install dependencies in a virtual environment, run:",
-            "    python3 -m venv .venv",
-            "    source .venv/bin/activate       # On Windows: .venv\\Scripts\\activate",
-            "    pip install -r requirements.txt\n",
+            *setup_instructions,
             "Alternatively, if using Conda:",
             "    conda env create -f environment.yml",
             "    conda activate dcdd\n",
