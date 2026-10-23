@@ -33,8 +33,6 @@ python -m venv .venv
 python reproduce.py
 ```
 
-*(Directly invoking `.\.venv\Scripts\python.exe` installs dependencies into the virtual environment without requiring manual activation, bypassing Windows PowerShell script execution policy restrictions. Windows users may also invoke `.\reproduce.bat`).*
-
 ### Linux (bash)
 
 ```bash
