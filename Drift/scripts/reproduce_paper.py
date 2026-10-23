@@ -314,11 +314,19 @@ def reproduce_table2_reliability(dataset_dir: Path, output_dir: Path) -> pd.Data
     assert len(shared) == 300, f"Expected 300 shared images, found {len(shared)}"
 
     records = []
-    print("\n" + "="*80)
+    col_attr = 22
+    col_fk = 9
+    col_pk = 9
+    col_ka = 9
+    col_pair = 18
+    col_3way = 18
+    hdr_line = f"{'Attribute':<{col_attr}s} {'Fleiss κ':>{col_fk}s} {'Paper κ':>{col_pk}s} {'Kripp α':>{col_ka}s} {'Pairwise % (Paper)':>{col_pair}s} {'3-Way % (Paper)':>{col_3way}s}"
+
+    print("\n" + "=" * len(hdr_line))
     print("Table 2: Human Inter-Annotator Reliability (N=300 blinded images, 3 raters)")
-    print("="*80)
-    print(f"{'Attribute':<22s} {'Fleiss κ':>9s} {'Paper κ':>9s} {'Kripp α':>9s} {'Pairwise %':>11s} {'3-Way %':>9s}")
-    print("-" * 75)
+    print("=" * len(hdr_line))
+    print(hdr_line)
+    print("-" * len(hdr_line))
 
     for attr in CORE_6_ATTRIBUTES:
         labels_matrix = np.column_stack([
@@ -340,7 +348,10 @@ def reproduce_table2_reliability(dataset_dir: Path, output_dir: Path) -> pd.Data
         ref = PAPER_TABLE_2[attr]
         pair_trunc = int(pairwise * 10) / 10.0
         unan_trunc = int(unanimous * 10) / 10.0
-        print(f"{attr:<22s} {fk:>9.3f} {ref['fleiss_kappa']:>9.3f} {ka:>9.3f} {pairwise:>9.1f}% ({ref['pairwise_pct']:.1f}%) {unanimous:>7.1f}% ({ref['unanimous_pct']:.1f}%)")
+
+        disp_pair = f"{pairwise:>5.1f}% ({ref['pairwise_pct']:>4.1f}%)"
+        disp_3way = f"{unanimous:>5.1f}% ({ref['unanimous_pct']:>4.1f}%)"
+        print(f"{attr:<{col_attr}s} {fk:>{col_fk}.3f} {ref['fleiss_kappa']:>{col_pk}.3f} {ka:>{col_ka}.3f} {disp_pair:>{col_pair}s} {disp_3way:>{col_3way}s}")
 
         records.append({
             "attribute": attr,
@@ -358,8 +369,11 @@ def reproduce_table2_reliability(dataset_dir: Path, output_dir: Path) -> pd.Data
             "n_raters": 3
         })
 
+    tables_dir = output_dir / "tables"
+    tables_dir.mkdir(parents=True, exist_ok=True)
     out_df = pd.DataFrame(records)
     out_df.to_csv(output_dir / "table2_inter_annotator_reliability.csv", index=False)
+    out_df.to_csv(tables_dir / "table2_inter_annotator_reliability.csv", index=False)
     return out_df
 
 
@@ -404,11 +418,17 @@ def reproduce_table3_vlm_human(dataset_dir: Path, output_dir: Path) -> pd.DataFr
     else:
         vlm_meta = None
 
-    print("\n" + "="*80)
+    col_attr = 22
+    col_n = 5
+    col_agree = 22
+    col_kappa = 18
+    hdr_line = f"{'Attribute':<{col_attr}s} {'N':>{col_n}s} {'Agreement % (Paper)':>{col_agree}s} {'Cohen κ (Paper)':>{col_kappa}s}"
+
+    print("\n" + "=" * len(hdr_line))
     print("Table 3: Agreement Between VLM Outputs and Majority Human Annotations (N=300)")
-    print("="*80)
-    print(f"{'Attribute':<22s} {'N':>5s} {'Calc Agree %':>13s} {'Paper %':>9s} {'Calc κ':>9s} {'Paper κ':>9s}")
-    print("-" * 75)
+    print("=" * len(hdr_line))
+    print(hdr_line)
+    print("-" * len(hdr_line))
 
     records = []
     for attr in CORE_6_ATTRIBUTES:
@@ -453,7 +473,9 @@ def reproduce_table3_vlm_human(dataset_dir: Path, output_dir: Path) -> pd.DataFr
         ref = PAPER_TABLE_3[attr]
 
         exact_trunc = int(exact_pct * 10) / 10.0
-        print(f"{attr:<22s} {len(h_maj):>5d} {exact_pct:>10.1f}% ({ref['exact_pct']:>4.1f}%) {kappa:>8.3f} ({ref['cohen_kappa']:>5.3f})")
+        disp_agree = f"{exact_pct:>5.1f}% ({ref['exact_pct']:>4.1f}%)"
+        disp_kappa = f"{kappa:>6.3f} ({ref['cohen_kappa']:>5.3f})"
+        print(f"{attr:<{col_attr}s} {len(h_maj):>{col_n}d} {disp_agree:>{col_agree}s} {disp_kappa:>{col_kappa}s}")
 
         records.append({
             "attribute": attr,
@@ -465,8 +487,11 @@ def reproduce_table3_vlm_human(dataset_dir: Path, output_dir: Path) -> pd.DataFr
             "paper_cohen_kappa": ref["cohen_kappa"]
         })
 
+    tables_dir = output_dir / "tables"
+    tables_dir.mkdir(parents=True, exist_ok=True)
     out_df = pd.DataFrame(records)
     out_df.to_csv(output_dir / "table3_vlm_human_agreement.csv", index=False)
+    out_df.to_csv(tables_dir / "table3_vlm_human_agreement.csv", index=False)
     return out_df
 
 
@@ -483,11 +508,19 @@ def reproduce_table4_refusals(df_manifest: pd.DataFrame, output_dir: Path) -> pd
         ("Mental Health", nano[nano["disability"] == "mental health condition"]),
     ]
 
-    print("\n" + "="*80)
+    col_cond = 16
+    col_att = 10
+    col_ref = 10
+    col_crate = 15
+    col_prate = 14
+    col_share = 10
+    hdr_line = f"{'Condition':<{col_cond}s} {'Attempts':>{col_att}s} {'Refusals':>{col_ref}s} {'Actual Rate %':>{col_crate}s} {'Paper Rate %':>{col_prate}s} {'Share %':>{col_share}s}"
+
+    print("\n" + "=" * len(hdr_line))
     print("Table 4: Nano Banana 2 Safety Refusal Rates Across Conditions (N=385 actual attempts)")
-    print("="*80)
-    print(f"{'Condition':<18s} {'Attempts':>10s} {'Refusals':>10s} {'Actual Rate %':>15s} {'Paper %':>10s} {'Share %':>9s}")
-    print("-" * 78)
+    print("=" * len(hdr_line))
+    print(hdr_line)
+    print("-" * len(hdr_line))
 
     records = []
     for name, c_df in condition_map:
@@ -498,8 +531,10 @@ def reproduce_table4_refusals(df_manifest: pd.DataFrame, output_dir: Path) -> pd
         paper_rate = PAPER_TABLE_4[name]["rate_pct"]
         hist_rate_390 = (n_ref / 390 * 100.0) if name == "Mental Health" else calc_rate
 
+        disp_calc = f"{calc_rate:>5.1f}%"
         disp_paper = f"{paper_rate:.1f}%" + ("*" if name == "Mental Health" else "")
-        print(f"{name:<18s} {n_att:>10d} {n_ref:>10d} {calc_rate:>14.1f}% {disp_paper:>10s} {share_pct:>8.1f}%")
+        disp_share = f"{share_pct:>5.1f}%"
+        print(f"{name:<{col_cond}s} {n_att:>{col_att}d} {n_ref:>{col_ref}d} {disp_calc:>{col_crate}s} {disp_paper:>{col_prate}s} {disp_share:>{col_share}s}")
 
         records.append({
             "condition": name,
@@ -513,8 +548,11 @@ def reproduce_table4_refusals(df_manifest: pd.DataFrame, output_dir: Path) -> pd
             "provenance_note": "145/390 = 37.18% in paper (planned 78-cell grid); actual 145/385 = 37.66%" if name == "Mental Health" else ""
         })
 
+    tables_dir = output_dir / "tables"
+    tables_dir.mkdir(parents=True, exist_ok=True)
     out_df = pd.DataFrame(records)
     out_df.to_csv(output_dir / "table4_gemini_refusal_rates.csv", index=False)
+    out_df.to_csv(tables_dir / "table4_gemini_refusal_rates.csv", index=False)
     return out_df
 
 
@@ -601,11 +639,23 @@ def reproduce_pairwise_drift(dataset_dir: Path, df_manifest: pd.DataFrame, df_an
     ]
 
     for title, fname, attrs, ref_dict in table_configs:
-        print("\n" + "="*80)
+        col_model = 15
+        col_attr = 22
+        col_mob = 17
+        col_vis = 17
+        col_hea = 17
+        col_men = 18
+        hdr_line = (
+            f"{'Model':<{col_model}s} {'Attribute':<{col_attr}s} "
+            f"{'Mobility (Paper)':>{col_mob}s} {'Vision (Paper)':>{col_vis}s} "
+            f"{'Hearing (Paper)':>{col_hea}s} {'Mental H. (Paper)':>{col_men}s}"
+        )
+
+        print("\n" + "=" * len(hdr_line))
         print(f"{title}: Pairwise Counterfactual Flip Rate (CFR %)")
-        print("="*80)
-        print(f"{'Model':<15s} {'Attribute':<22s} {'Mobility':>10s} {'Vision':>10s} {'Hearing':>10s} {'Mental H.':>10s}")
-        print("-" * 75)
+        print("=" * len(hdr_line))
+        print(hdr_line)
+        print("-" * len(hdr_line))
 
         records = []
         for model in models:
@@ -614,11 +664,13 @@ def reproduce_pairwise_drift(dataset_dir: Path, df_manifest: pd.DataFrame, df_an
                 ref_key = (model, attr)
                 ref_row = ref_dict.get(ref_key, {})
 
-                print(f"{model:<15s} {attr:<22s} "
-                      f"{calc_vals[0]:>5.1f}% ({ref_row.get('mobility', 0.0):>4.1f}) "
-                      f"{calc_vals[1]:>5.1f}% ({ref_row.get('vision', 0.0):>4.1f}) "
-                      f"{calc_vals[2]:>5.1f}% ({ref_row.get('hearing', 0.0):>4.1f}) "
-                      f"{calc_vals[3]:>5.1f}% ({ref_row.get('mental_health', 0.0):>4.1f})")
+                c0 = f"{calc_vals[0]:>5.1f}% ({ref_row.get('mobility', 0.0):>4.1f})"
+                c1 = f"{calc_vals[1]:>5.1f}% ({ref_row.get('vision', 0.0):>4.1f})"
+                c2 = f"{calc_vals[2]:>5.1f}% ({ref_row.get('hearing', 0.0):>4.1f})"
+                c3 = f"{calc_vals[3]:>5.1f}% ({ref_row.get('mental_health', 0.0):>4.1f})"
+
+                print(f"{model:<{col_model}s} {attr:<{col_attr}s} "
+                      f"{c0:>{col_mob}s} {c1:>{col_vis}s} {c2:>{col_hea}s} {c3:>{col_men}s}")
 
                 records.append({
                     "model": model,
@@ -632,16 +684,28 @@ def reproduce_pairwise_drift(dataset_dir: Path, df_manifest: pd.DataFrame, df_an
                     "calc_mental_health_cfr": round(calc_vals[3], 2),
                     "paper_mental_health_cfr": ref_row.get("mental_health", np.nan)
                 })
+        tables_dir = output_dir / "tables"
+        tables_dir.mkdir(parents=True, exist_ok=True)
         t_df = pd.DataFrame(records)
         t_df.to_csv(output_dir / fname, index=False)
+        t_df.to_csv(tables_dir / fname, index=False)
         tables[title] = t_df
 
     # Table 5: Dimensional Averages
-    print("\n" + "="*80)
+    col_model = 16
+    col_demo = 22
+    col_aff = 20
+    col_soc = 23
+    hdr_t5 = (
+        f"{'Model':<{col_model}s} {'Demographic (Paper)':>{col_demo}s} "
+        f"{'Affective (Paper)':>{col_aff}s} {'Social Agency (Paper)':>{col_soc}s}"
+    )
+
+    print("\n" + "=" * len(hdr_t5))
     print("Table 5: Average Pairwise Counterfactual Drift Across Dimensions (%)")
-    print("="*80)
-    print(f"{'Model':<16s} {'Demographic':>15s} {'Affective':>15s} {'Social Agency':>15s}")
-    print("-" * 75)
+    print("=" * len(hdr_t5))
+    print(hdr_t5)
+    print("-" * len(hdr_t5))
 
     table5_records = []
     for model in models:
@@ -652,9 +716,11 @@ def reproduce_pairwise_drift(dataset_dir: Path, df_manifest: pd.DataFrame, df_an
         mean_social = (m_rates["activity_engagement"] + m_rates["social_integration"]) / 2.0
 
         ref = PAPER_TABLE_5[model]
-        print(f"{model:<16s} {mean_affective:>7.1f}% ({ref['demographic']:>4.1f}*) "
-              f"{mean_demographic:>7.1f}% ({ref['affective']:>4.1f}*) "
-              f"{mean_social:>7.1f}% ({ref['social_agency']:>4.1f})")
+        d_demo = f"{mean_affective:>5.1f}% ({ref['demographic']:>4.1f}*)"
+        d_aff = f"{mean_demographic:>5.1f}% ({ref['affective']:>4.1f}*)"
+        d_soc = f"{mean_social:>5.1f}% ({ref['social_agency']:>4.1f})"
+
+        print(f"{model:<{col_model}s} {d_demo:>{col_demo}s} {d_aff:>{col_aff}s} {d_soc:>{col_soc}s}")
 
         table5_records.append({
             "model": model,
@@ -667,8 +733,11 @@ def reproduce_pairwise_drift(dataset_dir: Path, df_manifest: pd.DataFrame, df_an
             "provenance_note": "Paper published column headers for Demographic and Affective are swapped relative to attribute grouping."
         })
 
+    tables_dir = output_dir / "tables"
+    tables_dir.mkdir(parents=True, exist_ok=True)
     t5_df = pd.DataFrame(table5_records)
     t5_df.to_csv(output_dir / "table5_average_pairwise_drift.csv", index=False)
+    t5_df.to_csv(tables_dir / "table5_average_pairwise_drift.csv", index=False)
     tables["Table 5"] = t5_df
     return tables
 
@@ -703,11 +772,23 @@ def reproduce_distributional_shifts(dataset_dir: Path, df_manifest: pd.DataFrame
 
     result_tables = {}
     for title, fname, attrs in tables_config:
-        print("\n" + "="*80)
+        col_model = 15
+        col_attr = 22
+        col_m = 16
+        col_v = 16
+        col_h = 16
+        col_mh = 17
+        hdr_line = (
+            f"{'Model':<{col_model}s} {'Attribute':<{col_attr}s} "
+            f"{'Mobility':>{col_m}s} {'Vision':>{col_v}s} "
+            f"{'Hearing':>{col_h}s} {'Mental Health':>{col_mh}s}"
+        )
+
+        print("\n" + "=" * len(hdr_line))
         print(f"{title}: Per-Condition Distributional Shifts (Cramér's V)")
-        print("="*80)
-        print(f"{'Model':<15s} {'Attribute':<22s} {'Mobility':>14s} {'Vision':>14s} {'Hearing':>14s} {'Mental Health':>15s}")
-        print("-" * 85)
+        print("=" * len(hdr_line))
+        print(hdr_line)
+        print("-" * len(hdr_line))
 
         records = []
         for model in models:
@@ -755,9 +836,9 @@ def reproduce_distributional_shifts(dataset_dir: Path, df_manifest: pd.DataFrame
                     sig_star = "*" if p_fdr[i] < 0.05 else ""
                     formatted_cols.append(f"{r['v']:.3f}{sig_star} ({r['dom'][:6]})")
 
-                print(f"{model:<15s} {attr:<22s} "
-                      f"{formatted_cols[0]:>14s} {formatted_cols[1]:>14s} "
-                      f"{formatted_cols[2]:>14s} {formatted_cols[3]:>15s}")
+                print(f"{model:<{col_model}s} {attr:<{col_attr}s} "
+                      f"{formatted_cols[0]:>{col_m}s} {formatted_cols[1]:>{col_v}s} "
+                      f"{formatted_cols[2]:>{col_h}s} {formatted_cols[3]:>{col_mh}s}")
 
                 records.append({
                     "model": model,
@@ -776,8 +857,11 @@ def reproduce_distributional_shifts(dataset_dir: Path, df_manifest: pd.DataFrame
                     "mental_health_dominant": cond_results[3]["dom"],
                 })
 
+        tables_dir = output_dir / "tables"
+        tables_dir.mkdir(parents=True, exist_ok=True)
         t_df = pd.DataFrame(records)
         t_df.to_csv(output_dir / fname, index=False)
+        t_df.to_csv(tables_dir / fname, index=False)
         result_tables[title] = t_df
 
     return result_tables
@@ -907,6 +991,34 @@ All generated CSV tables are stored alongside this report in `{output_dir.resolv
     print(f"Reproduction audit report saved to: {report_path}")
 
 
+def open_results_in_viewer(output_dir: Path) -> None:
+    """Open generated publication figures in default system viewer."""
+    charts_dir = output_dir / "charts"
+    fig1 = charts_dir / "fig1_gemini_refusal_erasure.png"
+    fig3 = charts_dir / "fig3_flux_silent_demographic_drift.png"
+
+    opened = []
+    for fig_path in [fig1, fig3]:
+        if not fig_path.exists():
+            continue
+        try:
+            p_str = str(fig_path.resolve())
+            if sys.platform == "win32":
+                os.startfile(p_str)
+                opened.append(fig_path.name)
+            elif sys.platform == "darwin":
+                subprocess.Popen(["open", p_str], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                opened.append(fig_path.name)
+            else:
+                subprocess.Popen(["xdg-open", p_str], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                opened.append(fig_path.name)
+        except Exception:
+            pass
+
+    if opened:
+        print(f"\n[Viewer] Opened {len(opened)} publication figure(s) in default viewer: {', '.join(opened)}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Canonical reproduction pipeline for DCDD (WACV 2027).")
     parser.add_argument("--mode", choices=["tabular", "full"], default="tabular",
@@ -921,6 +1033,10 @@ def main():
                         help="Force fresh download from Hugging Face.")
     parser.add_argument("--output-dir", type=str, default=DEFAULT_OUTPUT_DIR,
                         help="Output directory for reproduction results.")
+    parser.add_argument("--open", action="store_true", default=True,
+                        help="Automatically open generated charts in system viewer (default: True).")
+    parser.add_argument("--no-open", dest="open", action="store_false",
+                        help="Do not automatically open generated charts.")
 
     args = parser.parse_args()
 
@@ -942,6 +1058,9 @@ def main():
     reproduce_distributional_shifts(dataset_path, dataset_dict["manifest"], dataset_dict["annotations"], output_dir)
     generate_publication_figures(dataset_path, dataset_dict["manifest"], output_dir)
     generate_reproduction_report(output_dir)
+
+    if args.open:
+        open_results_in_viewer(output_dir)
 
     print(f"\n================================================================================")
     print(f"Canonical DCDD Reproduction Complete! Results saved to: {output_dir}")
